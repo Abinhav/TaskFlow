@@ -1,0 +1,331 @@
+
+{% extends "base.html" %}
+
+{% block title %}
+Create Task | TaskFlow
+{% endblock %}
+
+{% block content %}
+
+<style>
+.create-task-page {
+    min-height: 75vh;
+    padding: 45px 20px 60px;
+    background: #f8fafc;
+}
+
+.create-task-container {
+    max-width: 780px;
+    margin: 0 auto;
+}
+
+.create-task-heading {
+    margin-bottom: 25px;
+}
+
+.create-task-heading span {
+    display: inline-block;
+    color: #2563eb;
+    background: #eff6ff;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.create-task-heading h1 {
+    color: #0f172a;
+    font-size: 31px;
+    letter-spacing: -0.7px;
+    margin-bottom: 6px;
+}
+
+.create-task-heading p {
+    color: #64748b;
+    font-size: 14px;
+}
+
+.create-task-card {
+    padding: 35px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 17px;
+    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.045);
+}
+
+.create-task-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.create-task-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.create-task-form label {
+    color: #334155;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.create-task-form input,
+.create-task-form textarea,
+.create-task-form select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    outline: none;
+    background: #ffffff;
+    color: #1e293b;
+    font-family: inherit;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.create-task-form input,
+.create-task-form select {
+    min-height: 47px;
+}
+
+.create-task-form textarea {
+    min-height: 125px;
+    resize: vertical;
+}
+
+.create-task-form input:focus,
+.create-task-form textarea:focus,
+.create-task-form select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.09);
+}
+
+.create-task-form input::placeholder,
+.create-task-form textarea::placeholder {
+    color: #94a3b8;
+}
+
+.create-task-form input[type="file"] {
+    padding: 10px;
+    background: #f8fafc;
+    cursor: pointer;
+}
+
+.create-task-form input[type="file"]::file-selector-button {
+    padding: 8px 13px;
+    margin-right: 12px;
+    border: none;
+    border-radius: 6px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.create-task-form .form-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.create-task-form .field-hint {
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.create-task-form .error-message {
+    padding: 12px 14px;
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.create-task-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.create-task-submit {
+    min-height: 46px;
+    padding: 0 23px;
+    border: none;
+    border-radius: 9px;
+    background: #2563eb;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.create-task-submit:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 13px rgba(37, 99, 235, 0.2);
+}
+
+.create-task-back {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.create-task-back:hover {
+    color: #2563eb;
+}
+
+@media (max-width: 600px) {
+    .create-task-page {
+        padding: 30px 14px;
+    }
+
+    .create-task-card {
+        padding: 23px 18px;
+    }
+
+    .create-task-heading h1 {
+        font-size: 26px;
+    }
+
+    .create-task-form .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .create-task-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .create-task-submit {
+        width: 100%;
+    }
+
+    .create-task-back {
+        text-align: center;
+    }
+}
+</style>
+
+<section class="create-task-page">
+    <div class="create-task-container">
+
+        <div class="create-task-heading">
+            <span>NEW TASK</span>
+            <h1>Create New Task</h1>
+            <p>Add a task and keep your work organized.</p>
+        </div>
+
+        <div class="create-task-card">
+
+            {% if error %}
+                <p class="error-message">{{ error }}</p>
+            {% endif %}
+
+            <form
+                class="create-task-form"
+                method="POST"
+                action="{{ url_for('create_task') }}"
+                enctype="multipart/form-data"
+            >
+
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="form-group">
+                    <label for="title">Task Title</label>
+                    <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        placeholder="What do you need to accomplish?"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        placeholder="Add more details about this task..."
+                    ></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="priority">Priority Level</label>
+                    <select id="priority" name="priority">
+                        <option value="Low">Low Priority</option>
+                        <option value="Medium" selected>Medium Priority</option>
+                        <option value="High">High Priority</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+
+                    <div class="form-group">
+                        <label for="start_date">Start Date</label>
+                        <input
+                            type="date"
+                            id="start_date"
+                            name="start_date"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="due_date">Due Date</label>
+                        <input
+                            type="date"
+                            id="due_date"
+                            name="due_date"
+                        >
+                    </div>
+
+                </div>
+
+                <div class="form-group">
+                    <label for="image">Task Image (Optional)</label>
+                    <input
+                        type="file"
+                        id="image"
+                        name="image"
+                        accept="image/png, image/jpeg, image/jpg"
+                    >
+                    <span class="field-hint">
+                        Supported formats: PNG, JPG, JPEG. Maximum size: 5 MB.
+                    </span>
+                </div>
+
+                <div class="create-task-actions">
+
+                    <a
+                        href="{{ url_for('dashboard') }}"
+                        class="create-task-back"
+                    >
+                        ← Back to Dashboard
+                    </a>
+
+                    <button type="submit" class="create-task-submit">
+                        + Create Task
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}

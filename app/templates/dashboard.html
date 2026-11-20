@@ -1,0 +1,421 @@
+
+{% extends "base.html" %}
+
+{% block title %}
+Dashboard | TaskFlow
+{% endblock %}
+
+{% block content %}
+
+<section class="dashboard-section">
+
+    <h1>Welcome, {{ username }}!</h1>
+
+    <p>You have successfully logged in to TaskFlow.</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <p class="success-message">{{ message }}</p>
+        {% endfor %}
+    {% endwith %}
+
+    <h2>Your Personal Dashboard</h2>
+
+    <div class="dashboard-stats">
+
+        <div class="stat-card">
+            <h3>Total Tasks</h3>
+            <p>{{ total_tasks }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Pending Tasks</h3>
+            <p>{{ pending_tasks }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Completed Tasks</h3>
+            <p>{{ completed_tasks }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Completion Rate</h3>
+            <p>{{ completion_rate }}%</p>
+        </div>
+
+    </div>
+
+    <div class="history-toggle-container">
+
+        <button type="button" id="open-history-btn" class="history-button">
+            <span>Completed Tasks History</span>
+            <span class="history-count">{{ completed_tasks }}</span>
+            <span>→</span>
+        </button>
+
+    </div>
+
+    <a href="{{ url_for('create_task') }}" class="create-task-link">
+        + Create New Task
+    </a>
+
+    <div class="task-filter-section">
+
+        <div class="task-search-box">
+            <input
+                type="text"
+                id="task-search"
+                placeholder="Search tasks by title..."
+            >
+        </div>
+
+        <div class="task-filter-controls">
+
+            <select id="status-filter">
+                <option value="All">All Status</option>
+                <option value="Pending">Pending</option>
+                <option value="Completed">Completed</option>
+            </select>
+
+            <select id="priority-filter">
+                <option value="All">All Priorities</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+            </select>
+
+            <select id="sort-filter">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="due-early">Due Date - Earliest First</option>
+                <option value="due-late">Due Date - Latest First</option>
+                <option value="priority">Priority - High to Low</option>
+            </select>
+
+        </div>
+
+    </div>
+
+    <h2>My Tasks</h2>
+
+    {% if tasks %}
+
+        <div class="task-list" id="pending-task-list">
+
+            {% for task in tasks %}
+
+                <button
+                    type="button"
+                    class="task-summary-card task-clickable"
+                    data-task-card
+                    data-filter-task
+                    data-title="{{ task.title }}"
+                    data-description="{{ task.description or '' }}"
+                    data-priority="{{ task.priority }}"
+                    data-status="{{ task.status }}"
+                    data-start-date="{{ task.start_date or 'Not specified' }}"
+                    data-due-date="{{ task.due_date or 'Not specified' }}"
+                    data-sort-due-date="{{ task.due_date.isoformat() if task.due_date else '' }}"
+                    data-created-at="{{ task.created_at.isoformat() if task.created_at else '' }}"
+                    data-completed-at="{{ task.completed_at.strftime('%d-%m-%Y %I:%M %p') if task.completed_at else '' }}"
+                    data-image="{% if task.image_filename %}{{ url_for('static', filename='images/' + task.image_filename) }}{% endif %}"
+                    data-edit-url="{{ url_for('edit_task', task_id=task.id) }}"
+                    data-complete-url="{{ url_for('complete_task', task_id=task.id) if task.status == 'Pending' else '' }}"
+                    data-delete-url="{{ url_for('delete_task', task_id=task.id) }}"
+                >
+
+                    <div class="task-summary-image">
+
+                        {% if task.image_filename %}
+
+                            <img
+                                src="{{ url_for('static', filename='images/' + task.image_filename) }}"
+                                alt="{{ task.title }}"
+                            >
+
+                        {% else %}
+
+                            <div class="task-image-placeholder">
+                                <span>📋</span>
+                                <small>No Image</small>
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                    <div class="task-summary-content">
+
+                        <h3>{{ task.title }}</h3>
+
+                        {% if task.status == "Completed" %}
+
+                            <span class="task-status completed-status">
+                                Completed
+                            </span>
+
+                            <p>
+                                <strong>Completed:</strong>
+                                {{ task.completed_at.strftime("%d-%m-%Y") if task.completed_at else "Not available" }}
+                            </p>
+
+                        {% else %}
+
+                            <span class="task-status pending-status">
+                                Pending
+                            </span>
+
+                            <p>
+                                <strong>Due Date:</strong>
+                                {{ task.due_date or "Not specified" }}
+                            </p>
+
+                        {% endif %}
+
+                    </div>
+
+                    <span class="task-card-arrow">›</span>
+
+                </button>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <p id="empty-task-message">
+            No tasks available. Create your first task!
+        </p>
+
+    {% endif %}
+
+    <p id="filter-results-count"></p>
+
+    <p id="no-filter-results" style="display: none;">
+        No matching tasks found.
+    </p>
+
+    <form method="POST" action="{{ url_for('logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit">Logout</button>
+    </form>
+
+</section>
+
+<div class="drawer-overlay" id="drawer-overlay"></div>
+
+<aside class="history-drawer" id="history-drawer">
+
+    <div class="drawer-header">
+
+        <div>
+            <h2>Completed Tasks</h2>
+            <p>Your completed task history</p>
+        </div>
+
+        <button
+            type="button"
+            class="drawer-close-btn"
+            id="close-history-btn"
+            aria-label="Close history"
+        >
+            &times;
+        </button>
+
+    </div>
+
+    <div class="drawer-body">
+
+        {% set completed_list = tasks | selectattr("status", "equalto", "Completed") | list %}
+
+        {% if completed_list %}
+
+            {% for task in completed_list %}
+
+                <button
+                    type="button"
+                    class="task-summary-card task-clickable history-task-card"
+                    data-task-card
+                    data-title="{{ task.title }}"
+                    data-description="{{ task.description or '' }}"
+                    data-priority="{{ task.priority }}"
+                    data-status="{{ task.status }}"
+                    data-start-date="{{ task.start_date or 'Not specified' }}"
+                    data-due-date="{{ task.due_date or 'Not specified' }}"
+                    data-sort-due-date="{{ task.due_date.isoformat() if task.due_date else '' }}"
+                    data-created-at="{{ task.created_at.isoformat() if task.created_at else '' }}"
+                    data-completed-at="{{ task.completed_at.strftime('%d-%m-%Y %I:%M %p') if task.completed_at else 'Not available' }}"
+                    data-image="{% if task.image_filename %}{{ url_for('static', filename='images/' + task.image_filename) }}{% endif %}"
+                    data-edit-url="{{ url_for('edit_task', task_id=task.id) }}"
+                    data-complete-url=""
+                    data-delete-url="{{ url_for('delete_task', task_id=task.id) }}"
+                >
+
+                    <div class="task-summary-image">
+
+                        {% if task.image_filename %}
+
+                            <img
+                                src="{{ url_for('static', filename='images/' + task.image_filename) }}"
+                                alt="{{ task.title }}"
+                            >
+
+                        {% else %}
+
+                            <div class="task-image-placeholder">
+                                <span>📋</span>
+                                <small>No Image</small>
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                    <div class="task-summary-content">
+
+                        <h3>{{ task.title }}</h3>
+
+                        <span class="task-status completed-status">
+                            Completed
+                        </span>
+
+                        <p>
+                            <strong>Completed:</strong>
+                            {{ task.completed_at.strftime("%d-%m-%Y") if task.completed_at else "Not available" }}
+                        </p>
+
+                    </div>
+
+                    <span class="task-card-arrow">›</span>
+
+                </button>
+
+            {% endfor %}
+
+        {% else %}
+
+            <div class="empty-history">
+
+                <span>📋</span>
+
+                <h3>No completed tasks yet</h3>
+
+                <p>Your completed tasks will appear here.</p>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</aside>
+
+<div class="task-modal-overlay" id="task-modal-overlay">
+
+    <div
+        class="task-details-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-task-title"
+    >
+
+        <div class="modal-header">
+
+            <h2 id="modal-task-title">Task Details</h2>
+
+            <button
+                type="button"
+                class="modal-close-btn"
+                id="close-task-modal"
+                aria-label="Close task details"
+            >
+                &times;
+            </button>
+
+        </div>
+
+        <div class="modal-body">
+
+            <div class="modal-task-image" id="modal-task-image-container">
+
+                <img id="modal-task-image" src="" alt="Task image">
+
+                <div class="task-image-placeholder" id="modal-image-placeholder">
+                    <span>📋</span>
+                    <small>No Image</small>
+                </div>
+
+            </div>
+
+            <div class="modal-status-row">
+
+                <span id="modal-task-status" class="task-status"></span>
+
+                <span id="modal-task-priority" class="priority-label"></span>
+
+            </div>
+
+            <div class="modal-detail-group">
+                <h3>Description</h3>
+                <p id="modal-task-description"></p>
+            </div>
+
+            <div class="modal-detail-grid">
+
+                <div class="modal-detail-item">
+                    <span>Start Date</span>
+                    <strong id="modal-start-date"></strong>
+                </div>
+
+                <div class="modal-detail-item">
+                    <span>Due Date</span>
+                    <strong id="modal-due-date"></strong>
+                </div>
+
+                <div class="modal-detail-item" id="completed-date-container">
+                    <span>Completed Date</span>
+                    <strong id="modal-completed-date"></strong>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="modal-actions">
+
+            <a href="#" id="modal-edit-btn" class="modal-edit-btn">
+                Edit Task
+            </a>
+
+            <form
+                method="POST"
+                id="modal-complete-form"
+                class="modal-complete-form"
+            >
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <button type="submit">
+                    Mark as Completed
+                </button>
+            </form>
+
+            <form
+                method="POST"
+                id="modal-delete-form"
+                class="modal-delete-form"
+            >
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <button type="submit">
+                    Delete Task
+                </button>
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

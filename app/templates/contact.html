@@ -1,0 +1,195 @@
+
+{% extends "base.html" %}
+
+{% block title %}
+Contact | TaskFlow
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .contact-section {
+        min-height: 75vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 50px 20px;
+        background: #f8fafc;
+    }
+
+    .contact-container {
+        width: 100%;
+        max-width: 650px;
+        background: #ffffff;
+        padding: 40px;
+        border-radius: 18px;
+        box-shadow: 0 10px 35px rgba(15, 23, 42, 0.08);
+        border: 1px solid #e2e8f0;
+    }
+
+    .contact-heading {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .contact-heading h1 {
+        font-size: 30px;
+        color: #0f172a;
+        margin-bottom: 10px;
+    }
+
+    .contact-heading p {
+        color: #64748b;
+        font-size: 15px;
+    }
+
+    .contact-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .contact-form label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #334155;
+        margin-top: 8px;
+    }
+
+    .contact-form input,
+    .contact-form textarea {
+        width: 100%;
+        padding: 13px 15px;
+        border: 1px solid #cbd5e1;
+        border-radius: 9px;
+        font-size: 15px;
+        font-family: Arial, sans-serif;
+        color: #1e293b;
+        background: #ffffff;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .contact-form input:focus,
+    .contact-form textarea:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .contact-form textarea {
+        min-height: 150px;
+        resize: vertical;
+    }
+
+    .contact-form button {
+        margin-top: 15px;
+        padding: 14px;
+        border: none;
+        border-radius: 9px;
+        background: #2563eb;
+        color: white;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.2s;
+    }
+
+    .contact-form button:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+    }
+
+    .contact-alert {
+        padding: 13px 15px;
+        border-radius: 9px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .contact-alert.success {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+    }
+
+    .contact-alert.error {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
+    @media (max-width: 600px) {
+        .contact-section {
+            padding: 30px 15px;
+        }
+
+        .contact-container {
+            padding: 25px 20px;
+        }
+
+        .contact-heading h1 {
+            font-size: 25px;
+        }
+    }
+</style>
+
+<section class="contact-section">
+
+    <div class="contact-container">
+
+        <div class="contact-heading">
+            <h1>Get in Touch</h1>
+            <p>Have a question or feedback? We'd love to hear from you.</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="contact-alert {{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endwith %}
+
+        <form class="contact-form" method="POST" action="/contact">
+
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <label for="name">Your Name</label>
+            <input
+                type="text"
+                id="name"
+                name="name"
+                placeholder="Enter your full name"
+                maxlength="100"
+                required
+            >
+
+            <label for="email">Email Address</label>
+            <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="Enter your email address"
+                maxlength="254"
+                required
+            >
+
+            <label for="message">Your Message</label>
+            <textarea
+                id="message"
+                name="message"
+                placeholder="Write your message here..."
+                maxlength="5000"
+                required
+            ></textarea>
+
+            <button type="submit">Send Message</button>
+
+        </form>
+
+    </div>
+
+</section>
+
+{% endblock %}

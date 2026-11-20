@@ -1,0 +1,364 @@
+
+{% extends "base.html" %}
+
+{% block title %}
+Edit Task | TaskFlow
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .edit-task-section {
+        min-height: 80vh;
+        padding: 50px 20px;
+        background: #f8fafc;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+    }
+
+    .edit-task-container {
+        width: 100%;
+        max-width: 750px;
+        background: #ffffff;
+        padding: 40px;
+        border-radius: 18px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 10px 35px rgba(15, 23, 42, 0.07);
+    }
+
+    .edit-task-heading {
+        margin-bottom: 30px;
+    }
+
+    .edit-task-heading h1 {
+        color: #0f172a;
+        font-size: 28px;
+        margin-bottom: 8px;
+    }
+
+    .edit-task-heading p {
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    .edit-task-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .edit-form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .edit-form-group label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #334155;
+    }
+
+    .edit-form-group input,
+    .edit-form-group textarea,
+    .edit-form-group select {
+        width: 100%;
+        padding: 13px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 9px;
+        background: #ffffff;
+        color: #1e293b;
+        font-size: 15px;
+        font-family: Arial, sans-serif;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .edit-form-group input:focus,
+    .edit-form-group textarea:focus,
+    .edit-form-group select:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .edit-form-group textarea {
+        min-height: 130px;
+        resize: vertical;
+    }
+
+    .edit-date-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+    }
+
+    .current-image-box {
+        padding: 15px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: #f8fafc;
+    }
+
+    .current-image-box img {
+        display: block;
+        width: 100%;
+        max-width: 300px;
+        max-height: 220px;
+        object-fit: cover;
+        border-radius: 9px;
+        margin-top: 10px;
+    }
+
+    .edit-form-group small {
+        color: #64748b;
+        font-size: 12px;
+    }
+
+    .edit-error-message {
+        padding: 13px 15px;
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        border-radius: 9px;
+        color: #991b1b;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+
+    .edit-form-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 5px;
+    }
+
+    .update-task-btn {
+        flex: 1;
+        padding: 14px;
+        border: none;
+        border-radius: 9px;
+        background: #2563eb;
+        color: #ffffff;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.2s;
+    }
+
+    .update-task-btn:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+    }
+
+    .back-dashboard-btn {
+        display: inline-block;
+        text-align: center;
+        padding: 14px 18px;
+        border: 1px solid #cbd5e1;
+        border-radius: 9px;
+        color: #334155;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+        transition: background 0.2s;
+    }
+
+    .back-dashboard-btn:hover {
+        background: #f1f5f9;
+    }
+
+    @media (max-width: 600px) {
+        .edit-task-section {
+            padding: 25px 14px;
+        }
+
+        .edit-task-container {
+            padding: 25px 18px;
+        }
+
+        .edit-task-heading h1 {
+            font-size: 24px;
+        }
+
+        .edit-date-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .edit-form-actions {
+            flex-direction: column;
+        }
+
+        .update-task-btn,
+        .back-dashboard-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<section class="edit-task-section">
+
+    <div class="edit-task-container">
+
+        <div class="edit-task-heading">
+            <h1>Edit Task</h1>
+            <p>Update your task details and keep everything organized.</p>
+        </div>
+
+        {% if error %}
+            <div class="edit-error-message">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <form
+            class="edit-task-form"
+            method="POST"
+            action="{{ url_for('edit_task', task_id=task.id) }}"
+            enctype="multipart/form-data"
+        >
+
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="edit-form-group">
+
+                <label for="title">Task Title</label>
+
+                <input
+                    type="text"
+                    id="title"
+                    name="title"
+                    value="{{ task.title }}"
+                    placeholder="Enter task title"
+                    maxlength="150"
+                    required
+                >
+
+            </div>
+
+            <div class="edit-form-group">
+
+                <label for="description">Description</label>
+
+                <textarea
+                    id="description"
+                    name="description"
+                    placeholder="Describe your task..."
+                >{{ task.description or "" }}</textarea>
+
+            </div>
+
+            <div class="edit-form-group">
+
+                <label for="priority">Priority</label>
+
+                <select id="priority" name="priority">
+
+                    <option value="Low"
+                        {% if task.priority == "Low" %}selected{% endif %}>
+                        Low Priority
+                    </option>
+
+                    <option value="Medium"
+                        {% if task.priority == "Medium" %}selected{% endif %}>
+                        Medium Priority
+                    </option>
+
+                    <option value="High"
+                        {% if task.priority == "High" %}selected{% endif %}>
+                        High Priority
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="edit-date-grid">
+
+                <div class="edit-form-group">
+
+                    <label for="start_date">Start Date</label>
+
+                    <input
+                        type="date"
+                        id="start_date"
+                        name="start_date"
+                        value="{{ task.start_date or '' }}"
+                    >
+
+                </div>
+
+                <div class="edit-form-group">
+
+                    <label for="due_date">Due Date</label>
+
+                    <input
+                        type="date"
+                        id="due_date"
+                        name="due_date"
+                        value="{{ task.due_date or '' }}"
+                    >
+
+                </div>
+
+            </div>
+
+            {% if task.image_filename %}
+
+                <div class="edit-form-group">
+
+                    <label>Current Task Image</label>
+
+                    <div class="current-image-box">
+
+                        <small>Your currently uploaded image</small>
+
+                        <img
+                            src="{{ url_for('static', filename='images/' + task.image_filename) }}"
+                            alt="Current task image"
+                        >
+
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+            <div class="edit-form-group">
+
+                <label for="image">Change Task Image (Optional)</label>
+
+                <input
+                    type="file"
+                    id="image"
+                    name="image"
+                    accept="image/png, image/jpeg, image/jpg"
+                >
+
+                <small>
+                    Leave empty to keep the existing image. PNG, JPG and JPEG only. Maximum 5 MB.
+                </small>
+
+            </div>
+
+            <div class="edit-form-actions">
+
+                <button type="submit" class="update-task-btn">
+                    Update Task
+                </button>
+
+                <a
+                    href="{{ url_for('dashboard') }}"
+                    class="back-dashboard-btn"
+                >
+                    Back to Dashboard
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</section>
+
+{% endblock %}
